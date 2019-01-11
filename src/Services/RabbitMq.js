@@ -42,7 +42,11 @@ export default class RabbitMqManager {
   close = async () => {
     debug('closing connection');
     if (this.conn) {
-      await this.conn.close();
+      try {
+        await this.conn.close();
+      } catch (error) {
+        cerror(error.message);
+      }
     }
   };
 

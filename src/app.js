@@ -49,8 +49,6 @@ const botSetting = {
 };
 const bot = new BotManager(connector, botSetting);
 
-app.post('/api/messages', connector.listen());
-
 // instantiate a new rabbit MQ class instance
 const rabmq = new RabbitMqManager();
 rabmq.setup();
@@ -59,14 +57,10 @@ bot.addQueue(rabmq);
 const routes = new Routing(bot, rabmq);
 // setup the routings
 routes.setup(app);
+app.post('/api/messages', connector.listen());
 
-app.use('*', (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(relative('public', 'index.html'));
-});
-
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
-  next(createError(404));
 });
 
 const server = createServer(app);
@@ -84,10 +78,12 @@ server.on('listening', async () => {
 });
 
 // for shutting down the application gracefully
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   debug('SIGINT signal received.');
   // close rabbitmq
-  await rabmq.close();
+  rabmq.close().then(() => {
+    debug('RabbitMq connection closed');
+  });
   // telsms.clearTimer();
   // Stops the server from accepting new connections and finishes existing connections.
   server.close((err) => {
@@ -98,5 +94,12 @@ process.on('SIGINT', async () => {
   });
 });
 
+const config = {
+  port,
+};
+const bindToIp = process.env.BIND_ADDR;
+if (bindToIp) {
+  config.host = bindToIp;
+}
 // Listen on provided port, on all network interfaces.
-server.listen(port);
+server.listen(config);

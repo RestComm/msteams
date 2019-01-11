@@ -12,10 +12,17 @@ export default class TeleStaxSMSController {
     const { sender, receiver, message } = req.body;
     // try to push the message to the MS Team
     // if the pushing fails, then save the message to the queue
+    if (!sender) {
+      debug('NO Sender information. Request not processed');
+      return res.status(403).send('Missing sender information');
+    }
+
     try {
-      this.bot.sendMessage(message);
+      if (message) {
+        this.bot.sendMessage(message);
+      }
     } catch (error) {
-      cerror(error.message);
+      cerror(error);
       // save the message to the queue
       await this.rabbitmq.pushToMq(
         JSON.stringify({

@@ -21,7 +21,9 @@ export default class BotManager extends UniversalBot {
   rootDialog = async (session, args) => {
     this.saveAddress = session.message.address;
     this.session = session;
-
+    console.log('====================================');
+    console.log(session.message);
+    console.log('====================================');
     const text = TeamsMessage.getTextWithoutMentions(session.message);
     // push it to rabbit mq.
     debug(text);
@@ -50,7 +52,7 @@ export default class BotManager extends UniversalBot {
     const nmsg = new Message().address(this.saveAddress);
     nmsg.text(message);
     nmsg.textLocale('en-US');
-    this.bot.send(nmsg);
+    this.send(nmsg);
   };
 
   addQueue = (rabbitMq) => {
