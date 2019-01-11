@@ -1,20 +1,34 @@
 #!/usr/bin/env node
 
 import { createServer } from 'http';
+import { join } from 'path';
 import createError from 'http-errors';
 import express, { json, urlencoded } from 'express';
 import morgan from 'morgan';
+import { TeamsChatConnector } from 'botbuilder-teams';
+import { MemoryBotStorage } from 'botbuilder';
+
 import { normalizePort, onError, getLogger } from './utils';
-
-import Routes from './routes';
-import BotManager from './bots';
-
-const bot = new BotManager();
+import Routing from './routes';
+import { BotManager } from './bots';
+import { RabbitMqManager } from './Services';
 
 const { debug, cerror } = getLogger('app');
 
+require('dotenv').config();
+
+function relative(...args) {
+  const root = [__dirname, '..'];
+  return join(...root, ...args);
+}
+
 const app = express();
 const isDev = app.get('env') === 'development';
+
+const port = normalizePort(process.env.PORT || 3333);
+app.set('port', port);
+
+app.use('/static', express.static(relative('public', 'static')));
 
 if (isDev) {
   app.use(morgan('dev'));
@@ -26,32 +40,37 @@ if (isDev) {
 app.use(json());
 app.use(urlencoded({ extended: false }));
 
-// import the routing
-Routes(app);
+const connector = new TeamsChatConnector({
+  appId: process.env.MICROSOFT_APP_ID,
+  appPassword: process.env.MICROSOFT_APP_PASSWORD,
+});
+const botSetting = {
+  storage: new MemoryBotStorage(),
+};
+const bot = new BotManager(connector, botSetting);
+
+app.post('/api/messages', connector.listen());
+
+// instantiate a new rabbit MQ class instance
+const rabmq = new RabbitMqManager();
+rabmq.setup();
+
+bot.addQueue(rabmq);
+const routes = new Routing(bot, rabmq);
+// setup the routings
+routes.setup(app);
+
+app.use('*', (req, res) => {
+  res.sendFile(relative('public', 'index.html'));
+});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
   next(createError(404));
 });
 
-// error handler
-app.use((err, req, res, next) => {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-const port = normalizePort(process.env.PORT || 3333);
-app.set('port', port);
-
 const server = createServer(app);
 
-// set
-bot.setup(app);
 // listen for errors
 server.on('error', (error) => {
   onError(error, port);
@@ -67,6 +86,9 @@ server.on('listening', async () => {
 // for shutting down the application gracefully
 process.on('SIGINT', async () => {
   debug('SIGINT signal received.');
+  // close rabbitmq
+  await rabmq.close();
+  // telsms.clearTimer();
   // Stops the server from accepting new connections and finishes existing connections.
   server.close((err) => {
     if (err) {

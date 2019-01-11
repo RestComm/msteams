@@ -1,22 +1,59 @@
-import { MemoryStorage, UniversalBot } from 'botbuilder';
-import { TeamsChatConnector, TeamsMessage } from 'botbuilder-teams';
+// import builder from 'botbuilder';
+import { UniversalBot, Message } from 'botbuilder';
+import { TeamsMessage } from 'botbuilder-teams';
+import { getLogger } from '../utils';
+import { TeleStaxSMS } from '../Services';
 
-export default class BotManager {
-  setup = (app) => {
-    const connector = new TeamsChatConnector({
-      appId: process.env.MICROSOFT_APP_ID,
-      appPassword: process.env.MICROSOFT_APP_PASSWORD,
-    });
+const { debug, cerror } = getLogger('bot');
 
-    const inMemoryBotStorage = new MemoryStorage();
+export default class BotManager extends UniversalBot {
+  constructor(connector, botSettings) {
+    super(connector, botSettings);
+    this.teleStaxSMS = new TeleStaxSMS();
+    // this.on('conversationUpdate', this.getConversationUpdateHandler);
+    this.dialog('/', this.rootDialog);
+  }
 
-    const bot = new UniversalBot(connector, (session) => {
-      const text = TeamsMessage.getTextWithoutMentions(session.message);
-      console.log(`You said: ${text}`); // eslint-disable-line
-      session.send('You said: %s', text);
-    });
-    bot.set('storage', inMemoryBotStorage);
+  // getConversationUpdateHandler = (bot) => {
+  //   debug(bot);
+  // };
 
-    app.post('/api/messages', connector.listen());
+  rootDialog = async (session, args) => {
+    this.saveAddress = session.message.address;
+    this.session = session;
+
+    const text = TeamsMessage.getTextWithoutMentions(session.message);
+    // push it to rabbit mq.
+    debug(text);
+    // try to send the sms. if the sms fails then try saving it to the rabbitmq
+    try {
+      const { statusCode } = await this.teleStaxSMS.isendSMS(
+        '12017018601',
+        '+15743870778',
+        text,
+      );
+      debug(`SMS sent with status ${statusCode}`);
+    } catch (error) {
+      cerror(error.message);
+      if (this.rabbitMq) {
+        await this.rabbitMq.pushToMq(text);
+      }
+    }
+  };
+
+  /**
+   *Send a message to the MS Team using the bot manager
+   * @param {String} message The message to be sent to the MS Channel
+   * @memberof BotManager
+   */
+  sendMessage = (message) => {
+    const nmsg = new Message().address(this.saveAddress);
+    nmsg.text(message);
+    nmsg.textLocale('en-US');
+    this.bot.send(nmsg);
+  };
+
+  addQueue = (rabbitMq) => {
+    this.rabbitMq = rabbitMq;
   };
 }

@@ -5,7 +5,7 @@ class Logger {
     this.config = Object.assign(
       {},
       {
-        context: 'ecluto:payment:backend',
+        context: 'paic',
         debug: true,
       },
       config || {},
