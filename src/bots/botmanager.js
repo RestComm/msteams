@@ -29,9 +29,9 @@ export default class BotManager extends UniversalBot {
     debug(text);
     // try to send the sms. if the sms fails then try saving it to the rabbitmq
     try {
-      const { statusCode } = await this.teleStaxSMS.isendSMS(
-        '12017018601',
-        '+15743870778',
+      const { statusCode } = await this.teleStaxSMS.sendSMS(
+        process.env.SENDER_NUMBER,
+        process.env.RECEIVER_TEST_NUMBER,
         text,
       );
       debug(`SMS sent with status ${statusCode}`);

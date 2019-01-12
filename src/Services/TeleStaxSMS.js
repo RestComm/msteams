@@ -38,6 +38,9 @@ export default class TeleStaxSMS extends EventEmitter {
         if (err) {
           reject(err);
         } else {
+          console.log('====================================');
+          console.log(body);
+          console.log('====================================');
           resolve({
             data: body,
             statusCode: (response && response.statusCode) || '500',
