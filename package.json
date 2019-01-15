@@ -8,21 +8,24 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "DEBUG=paic:* node ./dist/app.js",
-    "dev": "DEBUG=paic:* nodemon",
+    "start": " node ./dist/app.js",
+    "dev": "nodemon",
+    "compile": "./compile.sh",
     "test": "mocha --require @babel/register"
   },
   "dependencies": {
     "amqplib": "^0.5.3",
-    "axios": "^0.18.0",
+    "apollo-server-express": "^2.3.1",
     "botbuilder": "3.15.0",
     "botbuilder-teams": "^0.2.4",
     "dayjs": "^1.7.8",
     "debug": "^4.1.1",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
-    "http-errors": "^1.7.1",
+    "graphql": "^14.0.2",
+    "merge-graphql-schemas": "^1.5.8",
     "morgan": "^1.9.1",
+    "nano": "^8.0.0",
     "request": "^2.88.0"
   },
   "devDependencies": {

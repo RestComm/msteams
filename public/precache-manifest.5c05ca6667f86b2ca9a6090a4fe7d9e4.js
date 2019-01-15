@@ -1,15 +1,15 @@
 self.__precacheManifest = [
   {
-    "revision": "d882b3d337a6a70ed5ef",
-    "url": "/static/css/main.78889ee2.chunk.css"
+    "revision": "40180687afec3b2e1925",
+    "url": "/static/css/main.ad6e477b.chunk.css"
   },
   {
-    "revision": "d882b3d337a6a70ed5ef",
-    "url": "/static/js/main.d882b3d3.chunk.js"
+    "revision": "40180687afec3b2e1925",
+    "url": "/static/js/main.40180687.chunk.js"
   },
   {
-    "revision": "9bae4d51b2c292d22815",
-    "url": "/static/js/1.9bae4d51.chunk.js"
+    "revision": "b79e2ba6683b8e4b7a3c",
+    "url": "/static/js/1.b79e2ba6.chunk.js"
   },
   {
     "revision": "229c360febb4351a89df",
@@ -56,7 +56,7 @@ self.__precacheManifest = [
     "url": "/static/media/TeamsAssets-Regular.de8a9eb1.svg"
   },
   {
-    "revision": "882ad996b7cfb284891d22ec62fb52c7",
+    "revision": "554008e008f2de6292e5261f128ae766",
     "url": "/index.html"
   }
 ];

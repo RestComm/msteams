@@ -4,6 +4,10 @@ import { getLogger } from '../utils';
 const { cerror, debug } = getLogger('rabbitmq');
 
 export default class RabbitMqManager {
+  constructor(bot) {
+    this.bot = bot;
+  }
+
   setup = async () => {
     try {
       const config = {
@@ -75,8 +79,21 @@ export default class RabbitMqManager {
         (msg) => {
           // Message received.
           const body = msg.content.toString();
-          debug(body);
-          // perform action on the message
+          const smsContent = JSON.parse(body);
+          debug('%o', smsContent);
+          try {
+            const { sender, receiver, message } = smsContent;
+            if (message) {
+              const response = this.bot.sendMessage(message, sender, receiver);
+              if (response && response.status) {
+                // save to rabbit mq.
+                this.channel.ack(msg);
+              }
+            }
+          } catch (error) {
+            cerror(error.message);
+          }
+
           this.channel.ack(msg);
         },
         { noAck: false },

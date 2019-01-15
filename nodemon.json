@@ -1,8 +1,8 @@
 {
   "restartable": "rs", 
   "ignore": [
-    ".git",
-    "node_modules"
+    "public",
+    "*.test.js"
   ],
   "verbose": false,
   "args": [
@@ -10,7 +10,14 @@
   ],
   "exec": "babel-node",
   "watch": [
-    "src/"
+    "src/",
+    ".env",
+    "*.gql"
   ],
-  "ext": "js json"
+  "ext": "js json",
+  "signal": "SIGUSR2",
+  "delay": "2500",
+  "env": {
+    "DEBUG":"paic:*"
+  }
 }

@@ -1,8 +1,8 @@
 import { TeleStaxSMSController } from '../Controller';
 
 class RouterClass {
-  constructor(bot, rabbitmq) {
-    this.smsController = new TeleStaxSMSController(bot, rabbitmq);
+  constructor(rabbitmq) {
+    this.smsController = new TeleStaxSMSController(rabbitmq);
   }
 
   setup = (app) => {

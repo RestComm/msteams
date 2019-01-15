@@ -1,0 +1,30 @@
+
+type MSTeamMember{
+  id: String!
+  teamId: String
+  teamName: String
+  channelId: String
+  channelName: String
+  phoneNumber: String
+  createdAt: String
+}
+input MSTeamRegister{
+  teamId: String!
+  teamName: String!
+  channelId: String
+  channelName: String
+  phoneNumber: String!
+  loginHint: String
+  locale: String
+}
+
+type Query{
+  # get the member information using the team ID
+  getMemberById(teamId: String!) : MSTeamMember
+  # get the member information using the phone nmber
+  getMemberByPhone(phoneNumber: String!): MSTeamMember
+
+}
+type Mutation{
+  registerMember(member: MSTeamRegister) : Response
+}

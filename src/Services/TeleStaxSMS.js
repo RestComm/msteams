@@ -1,4 +1,3 @@
-import axios from 'axios';
 import request from 'request';
 import { EventEmitter } from 'events';
 import dayjs from 'dayjs';
@@ -38,9 +37,7 @@ export default class TeleStaxSMS extends EventEmitter {
         if (err) {
           reject(err);
         } else {
-          console.log('====================================');
-          console.log(body);
-          console.log('====================================');
+          // debug('%o',body);
           resolve({
             data: body,
             statusCode: (response && response.statusCode) || '500',
@@ -57,21 +54,22 @@ export default class TeleStaxSMS extends EventEmitter {
       .format('YYYY-MM-DDTHH:mm:ss');
 
     const todate = dayjs().format('YYYY-MM-DDTHH:mm:ss');
-    try {
-      const config = {
-        method: 'GET',
-        url: this.appurl,
-        params: {
-          StartTime: fromdate,
-          EndTime: todate,
-        },
-      };
-      const { data } = await axios(config);
-      this.emit('sms', data);
-      // send the data to the rabbitmq
-      debug('%o', data);
-    } catch (error) {
-      cerror(error.message);
-    }
+
+    const config = {
+      method: 'GET',
+      uri: this.appurl,
+      qs: {
+        StartTime: fromdate,
+        EndTime: todate,
+      },
+    };
+    request(config, (err, response, body) => {
+      if (err) {
+        cerror(err.message);
+      } else {
+        debug('%o', response);
+        this.emit('sms', body);
+      }
+    });
   };
 }

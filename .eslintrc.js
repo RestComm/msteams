@@ -8,5 +8,6 @@ module.exports = {
   rules: {
     'arrow-parens': 'off',
     'object-curly-newline': 'off',
+    treatUndefinedAsUnspecified: true,
   },
 };
