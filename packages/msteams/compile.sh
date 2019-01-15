@@ -4,9 +4,9 @@
 if [ "$1" eq "client" ]
 then
   echo "building the client........"
-  cd msteamui && yarn build 
-  echo "copying client files...."
-  yes | cp -rf build/ ../msteams/public/
+  cd ../msteamui && ./compile.sh
+  echo "change directory"
+  cd ../msteams
 fi
 
 echo "Creating the dist folder"
