@@ -1,5 +1,14 @@
 #!/bin/bash
 
+#build the ui
+if [ "$1" eq "client" ]
+then
+  echo "building the client........"
+  cd msteamui && yarn build 
+  echo "copying client files...."
+  yes | cp -rf build/ ../msteams/public/
+fi
+
 echo "Creating the dist folder"
 rm -rf dist && mkdir dist 
 
