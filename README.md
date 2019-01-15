@@ -10,10 +10,11 @@ Bob will then select one of the available phone numbers from the drop down list 
 
 When Alice receives a text message from Bobs virtual number she can reply to it and the message will instantly appear in Bobs MS teams chat window. 
 
+It is worth noting that the message is passing through Restcomm Cloud infrastructure which means bob can call an external service (API/WebHook) every time a message is sent or received. This can be extremely useful to update any third party system with the conversation log automatically.
 
-It is worth noting that the message is passing through Restcomm Cloud infrastructure which means bob can call an external service (API/WebHook) every time a message is sent or received. This can be extremely useful to update any third party system with the conversation log automatically.   
+# Flow
 
-
+<img width="600" alt="sms_for_msteams_flow" src="https://user-images.githubusercontent.com/19316784/51204976-92392a80-190d-11e9-9840-0a03efd63192.png">
 
 
 
