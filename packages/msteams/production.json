@@ -1,0 +1,23 @@
+{
+  "apps": [{
+    "name": "restcomm",
+    "script": "./src/app.js",
+    "watch": false,
+    "exec_mode": "cluster",
+    "instances" : 0,
+    "log_date_format": "YYYY-MM-DD HH:mm Z",
+    "error_file":"./logs/error.log",
+    "out_file": "./logs/out.log",
+    "env": {
+      "NODE_ENV": "production",
+      "PORT": 7000,
+      "DEBUG":"paic:*"
+    },
+    "env_production": {
+      "NODE_ENV": "production",
+      "PORT": 7000,
+      "DEBUG":"paic:*"
+    },
+    "ignore_watch": ["[\\/\\\\]\\./", "node_modules"]
+  }]
+}

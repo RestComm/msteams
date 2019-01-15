@@ -1,0 +1,23 @@
+{
+  "restartable": "rs", 
+  "ignore": [
+    "public",
+    "*.test.js"
+  ],
+  "verbose": false,
+  "args": [
+    "src/app.js"
+  ],
+  "exec": "babel-node",
+  "watch": [
+    "src/",
+    ".env",
+    "*.gql"
+  ],
+  "ext": "js json",
+  "signal": "SIGUSR2",
+  "delay": "2500",
+  "env": {
+    "DEBUG":"paic:*"
+  }
+}
