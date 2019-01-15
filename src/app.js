@@ -7,7 +7,6 @@ import express, { json, urlencoded } from 'express';
 import morgan from 'morgan';
 import { TeamsChatConnector } from 'botbuilder-teams';
 import { MemoryBotStorage } from 'botbuilder';
-
 import { databaseSetup, database } from './models';
 import { normalizePort, onError, getLogger } from './utils';
 import Routing from './routes';

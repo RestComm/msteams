@@ -10,8 +10,7 @@ export default class TeleStaxSMS extends EventEmitter {
     super();
     const accountSid = process.env.RESTCOMM_ACCOUNT_ID;
     const authtoken = process.env.RESTCOMM_AUTH_TOKEN;
-    // this.username = accountSid;
-    // this.password = authtoken;
+
     this.appurl = `${process.env.RESTCOMM_SMS_URL || 'http://127.0.0.1'}`
       .replace(/<accountSid>/g, accountSid)
       .replace(/<authToken>/g, authtoken);
