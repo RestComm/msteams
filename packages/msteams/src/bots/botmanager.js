@@ -1,18 +1,23 @@
 // import builder from 'botbuilder';
 import { UniversalBot, Message, HeroCard } from 'botbuilder';
-import { TeamsMessage } from 'botbuilder-teams';
+import { TeamsMessage, StripBotAtMentions } from 'botbuilder-teams';
 import { getLogger, ensureArray } from '../utils';
 import { TeleStaxSMS } from '../Services';
 import { database } from '../models';
+import RootDialog from './dialogs';
 
 const { debug, cerror } = getLogger('bot');
 
 export default class BotManager extends UniversalBot {
-  constructor(connector, botSettings) {
-    super(connector, botSettings);
+  constructor(_connector, botSettings) {
+    super(_connector, botSettings);
     this.teleStaxSMS = new TeleStaxSMS();
-    this.teamconnector = connector;
-    this.dialog('/', this.rootDialog);
+
+    new RootDialog(this).createChildDialogs();
+
+    this.use(new StripBotAtMentions());
+
+    // this.dialog('/', this.rootDialog);
   }
 
   getSenderNumber = async (teamId, tenant = {}, user = {}, saveAddress) => {
