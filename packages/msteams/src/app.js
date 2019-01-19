@@ -7,21 +7,26 @@ import express, { json, urlencoded } from 'express';
 import morgan from 'morgan';
 import { TeamsChatConnector } from 'botbuilder-teams';
 import { MemoryBotStorage } from 'botbuilder';
-import { databaseSetup, database } from './models';
+import { CouchDatabase } from './models';
 import { normalizePort, onError, getLogger } from './utils';
 import Routing from './routes';
-import { BotManager } from './bots';
+import { BotManager, RedisStorage } from './bots';
 import { RabbitMqManager } from './Services';
 import { typeDefs, resolvers } from './graphql';
 
-const { debug, cerror } = getLogger('app');
-
 require('dotenv').config();
+
+const { debug, cerror } = getLogger('app');
 
 function relative(...args) {
   const root = [__dirname, '..'];
   return join(...root, ...args);
 }
+
+const db = new CouchDatabase({
+  url: process.env.COUCHDB_URL,
+  dbname: process.env.COUCHDB_DB_NAME,
+});
 
 const app = express();
 const isDev = app.get('env') === 'development';
@@ -46,9 +51,15 @@ const connector = new TeamsChatConnector({
   appPassword: process.env.MICROSOFT_APP_PASSWORD,
 });
 const botSetting = {
-  storage: new MemoryBotStorage(),
+  // storage: new RedisStorage(30 * 60), // 30 minutes
+  storage: isDev ? new MemoryBotStorage() : new RedisStorage(30 * 60), // 30 minutes
 };
-const bot = new BotManager(connector, botSetting);
+// this will receive nothing, you can put your tenant id in the list to listen
+connector.setAllowedTenants([]);
+// this will reset and allow to receive from any tenants
+connector.resetAllowedTenants();
+
+const bot = new BotManager(connector, botSetting, db);
 
 // instantiate a new rabbit MQ class instance
 const rabmq = new RabbitMqManager(bot);
@@ -72,7 +83,7 @@ const apolloServer = new ApolloServer({
   resolvers,
   context: async ({ res }) => ({
     res,
-    db: database,
+    db: db.getDb(),
   }),
   playground: playgnd,
   introspection: playgnd,
@@ -100,7 +111,6 @@ server.on('listening', async () => {
   const addr = server.address();
   const bind = typeof addr === 'string' ? `pipe  ${addr}` : `port ${addr.port}`;
   debug(`Listening on  ${bind}`);
-  await databaseSetup();
 });
 
 // for shutting down the application gracefully
@@ -125,6 +135,7 @@ const config = {
 };
 const bindToIp = process.env.BIND_ADDR;
 if (bindToIp) {
+  debug(`Bindign to the IP Address ${bindToIp}`);
   config.host = bindToIp;
 }
 // Listen on provided port, on all network interfaces.

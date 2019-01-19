@@ -81,3 +81,5 @@ typings/
 .dynamodb/
 
 deploy.sh
+
+dist/

@@ -1,6 +1,7 @@
+/* eslint-disable function-paren-newline */
+/* eslint-disable no-param-reassign, implicit-arrow-linebreak,no-useless-constructor */
 import { DialogIds } from './dialogIds';
 
-/* eslint-disable no-param-reassign, implicit-arrow-linebreak,no-useless-constructor */
 export class BaseDialog {
   constructor(dialogId) {
     this.dialogId = dialogId;

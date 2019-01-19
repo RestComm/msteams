@@ -1,6 +1,10 @@
-import { TeamsMessage, AdaptiveCard } from 'botbuilder-teams';
-import { TriggerDialog } from './TriggerDialog';
-import { DialogIds, DialogMatches } from './dialogIds';
+import {
+  TeamsMessage,
+  AdaptiveCard,
+  // AdaptiveCardBotBuilderAction,
+} from 'botbuilder-teams';
+import { TriggerDialog } from '../TriggerDialog';
+import { DialogIds, DialogMatches } from '../dialogIds';
 
 export default (bot) => {
   const botHelper = (session) => {
@@ -20,6 +24,7 @@ export default (bot) => {
         wrap: true,
       },
     ]);
+
     adaptcard.actions([
       {
         type: 'Action.OpenUrl',

@@ -3,27 +3,33 @@ import { UniversalBot, Message, HeroCard } from 'botbuilder';
 import { TeamsMessage, StripBotAtMentions } from 'botbuilder-teams';
 import { getLogger, ensureArray } from '../utils';
 import { TeleStaxSMS } from '../Services';
-import { database } from '../models';
 import RootDialog from './dialogs';
 
 const { debug, cerror } = getLogger('bot');
 
 export default class BotManager extends UniversalBot {
-  constructor(_connector, botSettings) {
+  constructor(_connector, botSettings, db) {
     super(_connector, botSettings);
     this.teleStaxSMS = new TeleStaxSMS();
-
+    this.teamconnector = _connector;
     new RootDialog(this).createChildDialogs();
 
     this.use(new StripBotAtMentions());
 
+    this.on('conversationUpdate', (msg) => {
+      debug('%o', msg);
+      const event = TeamsMessage.getConversationUpdateData(msg);
+      debug('event');
+      debug(event);
+    });
+    this.database = db.getDb();
     // this.dialog('/', this.rootDialog);
   }
 
   getSenderNumber = async (teamId, tenant = {}, user = {}, saveAddress) => {
     try {
       const { id } = tenant;
-      const docs = await database.get(teamId);
+      const docs = await this.database.get(teamId);
       let updatedb = false;
       const newdoc = Object.assign({}, docs, {
         updatedAt: new Date(),
@@ -51,7 +57,7 @@ export default class BotManager extends UniversalBot {
       }
       // update the database
       if (updatedb) {
-        await database.insert(newdoc);
+        await this.database.insert(newdoc);
       }
 
       return newdoc;
@@ -75,7 +81,7 @@ export default class BotManager extends UniversalBot {
 
   checkconversation = async (id) => {
     try {
-      return await database.get(id);
+      return await this.database.get(id);
     } catch (error) {
       cerror(error.message);
     }
@@ -167,7 +173,7 @@ export default class BotManager extends UniversalBot {
         },
       };
 
-      const { docs } = await database.find(queryselector);
+      const { docs } = await this.database.find(queryselector);
 
       if (docs.length > 0) {
         const mdoc = docs[0];
@@ -194,7 +200,7 @@ export default class BotManager extends UniversalBot {
                     phoneNumber: sender,
                     createdAt: new Date(),
                   });
-                  await database.insert(newconv, id);
+                  await this.database.insert(newconv, id);
                 } catch (error) {
                   cerror(error.message);
                 }
