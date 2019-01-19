@@ -23,10 +23,9 @@ function relative(...args) {
   return join(...root, ...args);
 }
 
-const db = new CouchDatabase({
-  url: process.env.COUCHDB_URL,
-  dbname: process.env.COUCHDB_DB_NAME,
-});
+const db = new CouchDatabase();
+// create the database if it does not exist
+db.init();
 
 const app = express();
 const isDev = app.get('env') === 'development';
@@ -59,13 +58,13 @@ connector.setAllowedTenants([]);
 // this will reset and allow to receive from any tenants
 connector.resetAllowedTenants();
 
-const bot = new BotManager(connector, botSetting, db);
+const bot = new BotManager(connector, botSetting);
 
 // instantiate a new rabbit MQ class instance
 const rabmq = new RabbitMqManager(bot);
 rabmq.setup();
 
-bot.addQueue(rabmq);
+// bot.addQueue(rabmq);
 const routes = new Routing(rabmq);
 // setup the routings
 routes.setup(app);
@@ -83,7 +82,7 @@ const apolloServer = new ApolloServer({
   resolvers,
   context: async ({ res }) => ({
     res,
-    db: db.getDb(),
+    db: db.useDb(),
   }),
   playground: playgnd,
   introspection: playgnd,

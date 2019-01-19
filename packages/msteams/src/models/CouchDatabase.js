@@ -10,17 +10,20 @@ export default class CouchDatabase {
    * Create an instance of CouchDatabase
    * @param {Object} options constains the url and database name
    */
-  constructor(options = {}) {
+  constructor() {
     const { db } = couchdb({
-      url: options.url || process.env.COUCHDB_URL,
+      url: process.env.COUCHDB_URL,
     });
     this.db = db;
-    const userDatabase = options.dbname || process.env.COUCHDB_DB_NAME;
-    db.get(userDatabase, (err, data) => {
+    this.databasename = process.env.COUCHDB_DB_NAME || 'msteamproject';
+  }
+
+  init = () => {
+    this.db.get(this.databasename, (err, data) => {
       if (err) {
         cerror(err.message);
         // the database does not exist. Create it
-        db.create(userDatabase, (error, udata) => {
+        this.db.create(this.databasename, (error, udata) => {
           if (!error) {
             debug('%o', udata);
           } else {
@@ -32,8 +35,7 @@ export default class CouchDatabase {
         debug('%o', data);
       }
     });
-    this.databasename = userDatabase;
-  }
+  };
 
-  getDb = () => this.db.use(this.databasename);
+  useDb = () => this.db.use(this.databasename);
 }

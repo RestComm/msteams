@@ -1,18 +1,19 @@
 // import builder from 'botbuilder';
 import { UniversalBot, Message, HeroCard } from 'botbuilder';
 import { TeamsMessage, StripBotAtMentions } from 'botbuilder-teams';
-import { getLogger, ensureArray } from '../utils';
+import { getLogger } from '../utils';
 import { TeleStaxSMS } from '../Services';
 import RootDialog from './dialogs';
+import { CouchDatabase } from '../models';
 
 const { debug, cerror } = getLogger('bot');
 
 export default class BotManager extends UniversalBot {
-  constructor(_connector, botSettings, db) {
+  constructor(_connector, botSettings) {
     super(_connector, botSettings);
     this.teleStaxSMS = new TeleStaxSMS();
     this.teamconnector = _connector;
-    new RootDialog(this).createChildDialogs();
+    new RootDialog(this).register();
 
     this.use(new StripBotAtMentions());
 
@@ -22,140 +23,8 @@ export default class BotManager extends UniversalBot {
       debug('event');
       debug(event);
     });
-    this.database = db.getDb();
-    // this.dialog('/', this.rootDialog);
+    this.database = new CouchDatabase().useDb();
   }
-
-  getSenderNumber = async (teamId, tenant = {}, user = {}, saveAddress) => {
-    try {
-      const { id } = tenant;
-      const docs = await this.database.get(teamId);
-      let updatedb = false;
-      const newdoc = Object.assign({}, docs, {
-        updatedAt: new Date(),
-      });
-      if (!docs.saveAddress) {
-        // save the address
-        updatedb = true;
-      }
-      newdoc.saveAddress = saveAddress;
-      if (!docs.tenantId && id) {
-        // update the database by adding the tenantid
-        newdoc.tenantId = id;
-        updatedb = true;
-      }
-      const { users } = newdoc;
-      if (users) {
-        const isExistingUser = users.filter((ur) => ur.id === user.id);
-        if (!isExistingUser) {
-          updatedb = true;
-          newdoc.users.push(user);
-        }
-      } else if (user.id) {
-        updatedb = true;
-        newdoc.users = [user];
-      }
-      // update the database
-      if (updatedb) {
-        await this.database.insert(newdoc);
-      }
-
-      return newdoc;
-    } catch (error) {
-      cerror(error.message);
-      return null;
-    }
-  };
-
-  getAllMentioned = (entities) => {
-    const arr = ensureArray(entities);
-    return arr
-      .filter((entity) => entity.type === 'mention')
-      .map((entity) => entity.mentioned)
-      .filter((entity) => {
-        const regex = new RegExp(process.env.MICROSOFT_APP_ID, 'ig');
-        const isbot = regex.test(entity.id);
-        return !isbot;
-      });
-  };
-
-  checkconversation = async (id) => {
-    try {
-      return await this.database.get(id);
-    } catch (error) {
-      cerror(error.message);
-    }
-    return undefined;
-  };
-
-  rootDialog = async (session) => {
-    const saveAddress = session.message.address;
-
-    // send a typing indicator
-    session.sendTyping();
-
-    // teamsChannelId: channel: team: tenant:
-    const { teamsTeamId, tenant } = session.message.sourceEvent;
-
-    const { user } = session.message.address;
-    const doc = await this.getSenderNumber(
-      teamsTeamId,
-      tenant,
-      user,
-      saveAddress,
-    );
-
-    if (!doc) {
-      session.send(
-        'Please provide your RestComm number in the setting page. Thank you.',
-      );
-      return;
-    }
-    if (!doc.phoneNumber) {
-      session.send(
-        'The RestComm phone number is not valid. See Setting page for configuration',
-      );
-      return;
-    }
-
-    const text = TeamsMessage.getTextWithoutMentions(session.message);
-    debug(text);
-    // get the converstion id and check if the user has sent a message before;
-    const { conversation } = session.message.address;
-    if (conversation && conversation.id) {
-      const existingConv = await this.checkconversation(conversation.id);
-      if (existingConv) {
-        // send the message to the user directly.
-        const { phoneNumber } = existingConv;
-        await this.teleStaxSMS.sendSMS(doc.phoneNumber, phoneNumber, text);
-        return;
-      }
-    }
-
-    // get all mentioned in the message
-    const { entities } = session.message;
-    const mentioned = this.getAllMentioned(entities);
-    debug(mentioned);
-    // ===== individual chat
-
-    const pattern = /to:((\+?\d+)|,)*/gi;
-    const redata = text.match(pattern);
-
-    if (!redata) {
-      session.send('No destination number provided');
-      return;
-    }
-    const smsMessage = text.replace(redata[0], '').trim();
-    const receiver = redata[0].split(/,/g);
-    await Promise.all(
-      receiver.map((smsto) => {
-        const sendto = smsto.replace('to', '').replace(':', '');
-        return this.teleStaxSMS.sendSMS(doc.phoneNumber, sendto, smsMessage);
-      }),
-    );
-
-    // send a response card
-  };
 
   /**
    *Send a message to the MS Team using the bot manager
@@ -230,9 +99,5 @@ export default class BotManager extends UniversalBot {
   adaptiveCard = (message, from) => {
     const thnail = new HeroCard().subtitle(`From: ${from}`).text(message);
     return thnail.toAttachment();
-  };
-
-  addQueue = (rabbitMq) => {
-    this.rabbitMq = rabbitMq;
   };
 }
