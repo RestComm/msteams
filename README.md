@@ -17,6 +17,9 @@ It is worth noting that the message is passing through Restcomm Cloud infrastruc
 <img width="600" alt="sms_for_msteams_flow" src="https://user-images.githubusercontent.com/19316784/51204976-92392a80-190d-11e9-9840-0a03efd63192.png">
 
 
+# Contribution 
+
+Please file any issues you find here on Github. Please ensure that you are not sharing any Personally Identifiable Information(PII) or sensitive account information (API keys, credentials, etc.) when reporting an issue.
 
 
 
