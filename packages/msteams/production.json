@@ -10,12 +10,12 @@
     "out_file": "./logs/out.log",
     "env": {
       "NODE_ENV": "production",
-      "PORT": 7000,
+      "PORT": 5580,
       "DEBUG":"paic:*"
     },
     "env_production": {
       "NODE_ENV": "production",
-      "PORT": 7000,
+      "PORT": 5580,
       "DEBUG":"paic:*"
     },
     "ignore_watch": ["[\\/\\\\]\\./", "node_modules"]
