@@ -72,29 +72,35 @@ export default class RabbitMqManager {
     }
   };
 
+  processSMSMessage = async (msg) => {
+    // Message received.
+    const body = msg.content.toString();
+    const smsContent = JSON.parse(body);
+    debug('%o', smsContent);
+    try {
+      const { sender, receiver, message } = smsContent;
+      if (message) {
+        const response = await this.bot.sendMessage(message, sender, receiver);
+        debug('%o', response);
+        if (response && response.status) {
+          // save to rabbit mq.
+          this.channel.ack(msg);
+        } else {
+          this.channel.ack(msg); // TODO - fetch the message later for processing
+        }
+      }
+    } catch (error) {
+      cerror(error.message);
+      this.channel.ack(msg); // TODO - fetch the message later for processing
+    }
+  };
+
   receiveFromMq = async () => {
     try {
       await this.channel.consume(
         this.queuename,
         (msg) => {
-          // Message received.
-          const body = msg.content.toString();
-          const smsContent = JSON.parse(body);
-          debug('%o', smsContent);
-          try {
-            const { sender, receiver, message } = smsContent;
-            if (message) {
-              const response = this.bot.sendMessage(message, sender, receiver);
-              if (response && response.status) {
-                // save to rabbit mq.
-                this.channel.ack(msg);
-              }
-            }
-          } catch (error) {
-            cerror(error.message);
-          }
-
-          this.channel.ack(msg);
+          this.processSMSMessage(msg);
         },
         { noAck: false },
       );

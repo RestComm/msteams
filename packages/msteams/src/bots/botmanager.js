@@ -2,7 +2,6 @@
 import { UniversalBot, Message, HeroCard } from 'botbuilder';
 import { TeamsMessage, StripBotAtMentions } from 'botbuilder-teams';
 import { getLogger } from '../utils';
-import { TeleStaxSMS } from '../Services';
 import RootDialog from './dialogs';
 import { CouchDatabase } from '../models';
 
@@ -11,7 +10,6 @@ const { debug, cerror } = getLogger('bot');
 export default class BotManager extends UniversalBot {
   constructor(_connector, botSettings) {
     super(_connector, botSettings);
-    this.teleStaxSMS = new TeleStaxSMS();
     this.teamconnector = _connector;
     new RootDialog(this).register();
 
