@@ -12,6 +12,8 @@ import client from './Apolloclient';
 import StaticTabPage from './Views/StaticTabPage';
 import TeamsTab from './Views/TeamTabs';
 import ConfigurationTab from './Views/ConfigureTab';
+import AuthPages from './Views/AuthPage';
+import SuccessOrFailedCallback from './Views/AuthPage/SuccessCallback';
 
 class App extends Component {
   state = {
@@ -96,6 +98,11 @@ class App extends Component {
               <Route exact path="/personal" component={StaticTabPage} />
               <Route path="/team" component={TeamsTab} />
               <Route path="/configure" component={ConfigurationTab} />
+              <Route path="/auth/start" component={AuthPages} />
+              <Route
+                path="/cbresult/:verificationCode/:result"
+                component={SuccessOrFailedCallback}
+              />
               <Route path="/" component={StaticTabPage} />
             </Switch>
           </BrowserRouter>

@@ -1,4 +1,5 @@
 import { TeleStaxSMSController } from '../Controller';
+// import authRoute from './auth';
 
 class RouterClass {
   constructor(rabbitmq) {
@@ -7,6 +8,7 @@ class RouterClass {
 
   setup = (app) => {
     app.post('/receivesms', this.smsController.receiveSMSCall);
+    // app.use('/auth', authRoute);
   };
 }
 

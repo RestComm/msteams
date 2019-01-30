@@ -6,6 +6,7 @@ import helpDialog from './HelpDialog';
 import defaultDialog from './Default';
 import { getLogger } from '../../utils';
 import { CouchDatabase } from '../../models';
+import AuthDialog from './AuthDialog';
 
 const { cerror } = getLogger('bot');
 
@@ -15,20 +16,18 @@ export default class RootDialog extends IntentDialog {
   constructor(bot) {
     super();
     this.bot = bot;
-    // this.onDefault((session) => {
-    //   session.conversationData.currentDialogName = DialogIds.RootDialogId;
-    //   session.beginDialog('greetings');
-    //   session.endDialog();
-    // });
+
     this.onDefault((session) => this.defaultConversation(session));
     bot.dialog(DialogIds.RootDialogId, this);
   }
 
   // Create the child dialogs and attach them to the bot
   register = () => {
+    const { bot } = this;
     SendSMSDialog(this.bot);
     helpDialog(this.bot);
     defaultDialog(this.bot);
+    new AuthDialog(bot); // eslint-disable-line
   };
 
   getSenderNumber = async (teamId, tenant = {}, user = {}, saveAddress) => {
@@ -74,34 +73,10 @@ export default class RootDialog extends IntentDialog {
 
   defaultConversation = async (session) => {
     session.conversationData.currentDialogName = DialogIds.RootDialogId;
-    // save address
-    const saveAddress = session.message.address;
+
     // send a typing indicator
     session.sendTyping();
 
-    const {
-      sourceEvent: { teamsTeamId, tenant },
-      address: { user },
-    } = session.message;
-
-    const doc = await this.getSenderNumber(
-      teamsTeamId,
-      tenant,
-      user,
-      saveAddress,
-    );
-    if (!doc) {
-      session.endDialog(
-        'Sorry, your profile does not permit sending messages to a phone. See your administrator.',
-      );
-      return;
-    }
-    if (!doc.phoneNumber) {
-      session.endDialog(
-        'Sorry, your profile does not permit sending messages to a phone. See your administrator',
-      );
-      return;
-    }
     const { conversation } = session.message.address;
     const { text } = session.message;
 
@@ -109,9 +84,9 @@ export default class RootDialog extends IntentDialog {
       const existingConv = await this.checkconversation(conversation.id);
       if (existingConv) {
         // send the message to the user directly.
-        const { phoneNumber } = existingConv;
+        const { phoneNumber, receiver } = existingConv;
         try {
-          await this.teleStaxSMS.sendSMS(doc.phoneNumber, phoneNumber, text);
+          await this.teleStaxSMS.sendSMS(receiver, phoneNumber, text);
           session.endDialog('Message Delivered');
         } catch (err) {
           session.endDialog('Failed to send message');
