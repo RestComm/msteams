@@ -4,9 +4,49 @@ import { Prompts } from 'botbuilder';
 import { TriggerDialog } from '../TriggerDialog';
 import { DialogIds, DialogMatches } from '../dialogIds';
 import { TeleStaxSMS } from '../../../Services';
+import { getUserToken, getProfileAsync } from '../utils';
+import { saveUserAddressToDb, getUserAddressFromDb } from './utils';
 
 export default (bot) => {
+  const checkUserProfile = async (session, _, next) => {
+    session.sendTyping();
+    const { userData } = session;
+    if (userData && userData.senderNumber) {
+      next();
+    } else {
+      const usdb = await getUserAddressFromDb(session);
+      if (usdb) {
+        session.userData.senderNumber = usdb.phoneNumber;
+        next();
+      } else {
+        const userToken = getUserToken(session);
+        if (userToken) {
+          const profile = await getProfileAsync(userToken.accessToken);
+          if (profile.businessPhones && profile.businessPhones.length > 0) {
+            const [senderNumber] = profile.businessPhones;
+            session.userData.senderNumber = senderNumber;
+            // save the number to database
+            try {
+              await saveUserAddressToDb(session, senderNumber);
+            } catch (error) {
+              session.endDialog('Please Try again');
+            }
+            next();
+          } else {
+            session.endDialog(
+              'Please contact the administrator to enable you to send SMS',
+            );
+          }
+        } else {
+          // session.send('Please sign in to AzureAD so I can access your profile.');
+          session.beginDialog(DialogIds.init);
+        }
+      }
+    }
+  };
+
   const smDialog = (session, args, next) => {
+    // check if the user has logged in
     const { text } = session.message;
     const chText = text.trim().toLowerCase();
     if (chText === 'sms' || chText === 'send sms') {
@@ -26,11 +66,16 @@ export default (bot) => {
     }
   };
   const sendSMMessage = (session, result) => {
+    const { senderNumber } = session.userData;
+    if (!senderNumber) {
+      session.endDialog('Unable to send SMS. Contact your administrator');
+      return;
+    }
     const { msg, destination } = result.response;
     if (msg && destination) {
       const sendSM = new TeleStaxSMS();
       sendSM
-        .sendSMS('12017018601', destination, msg)
+        .sendSMS(senderNumber, destination, msg)
         .then(() => {
           // session.send('Message delivered')
           session.endDialog('Message delivered');
@@ -43,22 +88,31 @@ export default (bot) => {
     }
   };
   const messageToSend = (session, result) => {
-    const { receiver } = session.userData;
-    const msg = result.response;
-    const sendSM = new TeleStaxSMS();
-    if (!receiver) {
-      session.endDialog('Message could not be sent');
+    const { receiver, senderNumber } = session.userData;
+    if (!senderNumber) {
+      session.endDialog('Unable to send SMS. Contact your administrator');
     } else {
-      sendSM
-        .sendSMS('12017018601', receiver, msg)
-        .then(() => {
-          // session.send('Message delivered')
-          session.endDialog('Message delivered');
-        })
-        .catch((err) => session.endDialog(err.message));
+      const msg = result.response;
+      const sendSM = new TeleStaxSMS();
+      if (!receiver) {
+        session.endDialog('Message could not be sent');
+      } else {
+        sendSM
+          .sendSMS(senderNumber, receiver, msg)
+          .then(() => {
+            // session.send('Message delivered')
+            session.endDialog('Message delivered');
+          })
+          .catch((err) => session.endDialog(err.message));
+      }
     }
   };
 
   const diaAction = new TriggerDialog(bot, DialogIds.sms, DialogMatches.sms);
-  diaAction.addActions([smDialog, sendSMMessage, messageToSend]);
+  diaAction.addActions([
+    checkUserProfile,
+    smDialog,
+    sendSMMessage,
+    messageToSend,
+  ]);
 };

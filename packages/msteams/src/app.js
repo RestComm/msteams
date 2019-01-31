@@ -70,6 +70,11 @@ const routes = new Routing(rabmq);
 routes.setup(app);
 app.post('/api/messages', connector.listen());
 
+// Configure auth routes
+app.get('/callback/azureADv1/auth', (req, res) => {
+  bot.handleOAuthCallback(req, res);
+});
+
 const playgnd = !!process.env.PLAYGROUND;
 
 const corOptions = {
