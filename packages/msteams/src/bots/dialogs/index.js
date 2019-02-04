@@ -7,6 +7,7 @@ import defaultDialog from './Default';
 import { getLogger } from '../../utils';
 import { CouchDatabase } from '../../models';
 import AuthDialog from './AuthDialog';
+import ReloadDialog from './ReloadDialog';
 
 const { cerror } = getLogger('bot');
 
@@ -28,6 +29,7 @@ export default class RootDialog extends IntentDialog {
     helpDialog(this.bot);
     defaultDialog(this.bot);
     new AuthDialog(bot); // eslint-disable-line
+    new ReloadDialog(bot); // eslint-disable-line
   };
 
   getSenderNumber = async (teamId, tenant = {}, user = {}, saveAddress) => {
