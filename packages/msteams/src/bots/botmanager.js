@@ -23,16 +23,16 @@ export default class BotManager extends UniversalBot {
 
     this.use(new StripBotAtMentions());
 
-    // this.on('conversationUpdate', (msg) => {
-    //   try {
-    //     debug('%o', msg);
-    //     const event = TeamsMessage.getConversationUpdateData(msg);
-    //     debug('event');
-    //     debug(event);
-    //   } catch (error) {
-    //     cerror(error.message);
-    //   }
-    // });
+    this.on('conversationUpdate', (msg) => {
+      try {
+        debug('%o', msg);
+        const event = TeamsMessage.getConversationUpdateData(msg);
+        debug('event');
+        debug(event);
+      } catch (error) {
+        cerror(error.message);
+      }
+    });
     this.database = new CouchDatabase().useDb();
   }
 
@@ -43,11 +43,12 @@ export default class BotManager extends UniversalBot {
    */
   sendMessage = async (message, sender, receiver) => {
     // check if the receiver is in the database
+    const nphone = receiver.replace(/\D/g, '').replace(/\+/g, '');
     try {
       const queryselector = {
         selector: {
           phoneNumber: {
-            $eq: receiver,
+            $eq: nphone,
           },
         },
       };

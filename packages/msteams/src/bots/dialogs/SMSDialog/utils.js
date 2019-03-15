@@ -7,9 +7,10 @@ export const saveUserAddressToDb = async (session, phoneNumber) => {
     throw new Error('No phone number provided');
   }
   try {
+    const nphone = phoneNumber.replace(/\D/g, '').replace(/\+/g, '');
     const { address } = session.message;
     const { id } = address.user;
-    const doc = { address, phoneNumber };
+    const doc = { address, nphone };
     await db.insert(doc, id);
   } catch (error) {
     throw error;

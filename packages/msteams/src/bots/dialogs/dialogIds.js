@@ -9,7 +9,8 @@ export const DialogIds = {
 };
 
 export const DialogMatches = {
-  sms: /^([\r\t\n\s]*)?sms(.*?)/gi,
+  // sms: /^([\r\t\n\s]*)?sms(.*?)/gi,
+  sms: /^([\n\r\t\s]*)?sms(.*)?/gi,
   start: /^(start|start\snew)/i,
   help: /^help/i,
   greetings: /^(greeting|greetings|hello)$/i,
